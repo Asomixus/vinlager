@@ -18,7 +18,6 @@ db.exec(`
     vintage INTEGER,
     type TEXT NOT NULL DEFAULT 'rødvin',
     quantity INTEGER NOT NULL DEFAULT 1,
-    location TEXT,
     pairs_with TEXT,
     notes TEXT,
     image TEXT,
@@ -27,6 +26,11 @@ db.exec(`
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+// Migrering: dropp location-kolonnen fra databaser opprettet før den ble fjernet
+if (db.prepare("SELECT 1 FROM pragma_table_info('wines') WHERE name = 'location'").get()) {
+  db.exec("ALTER TABLE wines DROP COLUMN location");
+}
 
 import type { Wine } from "./types";
 
@@ -48,7 +52,6 @@ export function insertWine(wine: {
   vintage: number | null;
   type: string;
   quantity: number;
-  location: string | null;
   pairs_with: string | null;
   notes: string | null;
   image: string | null;
@@ -56,8 +59,8 @@ export function insertWine(wine: {
 }): number {
   const result = db
     .prepare(
-      `INSERT INTO wines (name, producer, vintage, type, quantity, location, pairs_with, notes, image, vinmonopolet_id)
-       VALUES (@name, @producer, @vintage, @type, @quantity, @location, @pairs_with, @notes, @image, @vinmonopolet_id)`
+      `INSERT INTO wines (name, producer, vintage, type, quantity, pairs_with, notes, image, vinmonopolet_id)
+       VALUES (@name, @producer, @vintage, @type, @quantity, @pairs_with, @notes, @image, @vinmonopolet_id)`
     )
     .run(wine);
   return Number(result.lastInsertRowid);

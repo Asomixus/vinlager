@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { TYPE_LABELS, WINE_TYPES } from "@/lib/types";
+import { PAIRS_WITH_TAGS, TYPE_LABELS, WINE_TYPES } from "@/lib/types";
 import { addWine } from "@/lib/actions";
 
 export default function WineForm() {
@@ -98,27 +98,33 @@ export default function WineForm() {
         </Field>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Hylleplass">
-          <input name="location" placeholder="F.eks. hylle B3" className={inputClass} />
-        </Field>
-        <Field label="Varenummer">
-          <input
-            name="vinmonopolet_id"
-            inputMode="numeric"
-            placeholder="F.eks. 9921801"
-            className={inputClass}
-          />
-        </Field>
-      </div>
-
-      <Field label="Passer til">
+      <Field label="Varenummer">
         <input
-          name="pairs_with"
-          placeholder="F.eks. lam, storfe, modne oster"
+          name="vinmonopolet_id"
+          inputMode="numeric"
+          placeholder="F.eks. 9921801"
           className={inputClass}
         />
       </Field>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-muted">Passer til</span>
+        <div className="flex flex-wrap gap-2">
+          {PAIRS_WITH_TAGS.map((tag) => (
+            <label key={tag} className="cursor-pointer">
+              <input
+                type="checkbox"
+                name="pairs_with"
+                value={tag}
+                className="peer sr-only"
+              />
+              <span className="block rounded-full border border-card-border bg-card px-3 py-1.5 text-sm font-medium capitalize transition-colors peer-checked:border-accent peer-checked:bg-accent peer-checked:text-accent-foreground">
+                {tag}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
 
       <Field label="Notater">
         <textarea name="notes" rows={3} className={inputClass} />

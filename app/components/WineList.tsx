@@ -15,7 +15,7 @@ export default function WineList({ wines }: { wines: Wine[] }) {
       if (!showEmpty && wine.quantity === 0) return false;
       if (typeFilter && wine.type !== typeFilter) return false;
       if (!query) return true;
-      return [wine.name, wine.producer, wine.pairs_with, wine.location, wine.vinmonopolet_id]
+      return [wine.name, wine.producer, wine.pairs_with, wine.vinmonopolet_id]
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(query));
     });
@@ -143,9 +143,6 @@ function WineCard({ wine }: { wine: Wine }) {
           <p className="mt-1 line-clamp-2 text-sm">
             <span className="text-muted">Passer til:</span> {wine.pairs_with}
           </p>
-        )}
-        {wine.location && (
-          <p className="mt-0.5 text-xs text-muted">📍 {wine.location}</p>
         )}
         {wine.vinmonopolet_id && (
           <p className="mt-0.5 text-xs">

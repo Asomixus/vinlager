@@ -6,6 +6,7 @@ import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as db from "./db";
+import { PAIRS_WITH_TAGS } from "./types";
 
 export async function addWine(formData: FormData): Promise<void> {
   const name = String(formData.get("name") ?? "").trim();
@@ -31,8 +32,7 @@ export async function addWine(formData: FormData): Promise<void> {
     vintage: vintageRaw ? Number(vintageRaw) : null,
     type: String(formData.get("type") ?? "rødvin"),
     quantity: Number.isFinite(quantityRaw) && quantityRaw > 0 ? Math.floor(quantityRaw) : 1,
-    location: emptyToNull(formData.get("location")),
-    pairs_with: emptyToNull(formData.get("pairs_with")),
+    pairs_with: parsePairsWith(formData),
     notes: emptyToNull(formData.get("notes")),
     image,
     vinmonopolet_id: emptyToNull(formData.get("vinmonopolet_id")),
@@ -55,6 +55,14 @@ export async function putBack(id: number): Promise<void> {
 export async function removeWine(id: number): Promise<void> {
   db.deleteWine(id);
   revalidatePath("/");
+}
+
+function parsePairsWith(formData: FormData): string | null {
+  const tags = formData
+    .getAll("pairs_with")
+    .map(String)
+    .filter((tag) => (PAIRS_WITH_TAGS as readonly string[]).includes(tag));
+  return tags.length > 0 ? tags.join(", ") : null;
 }
 
 function emptyToNull(value: FormDataEntryValue | null): string | null {

@@ -5,7 +5,6 @@ export type Wine = {
   vintage: number | null;
   type: string;
   quantity: number;
-  location: string | null;
   pairs_with: string | null;
   notes: string | null;
   image: string | null;
@@ -21,6 +20,19 @@ export const WINE_TYPES = [
   "rosé",
   "dessertvin",
   "annet",
+] as const;
+
+export const PAIRS_WITH_TAGS = [
+  "frittstående",
+  "kjøtt",
+  "fisk",
+  "skalldyr",
+  "kylling",
+  "lam",
+  "vilt",
+  "ost",
+  "vegetar",
+  "dessert",
 ] as const;
 
 export const TYPE_LABELS: Record<string, string> = {
