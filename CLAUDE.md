@@ -8,6 +8,8 @@ Mobilvennlig PWA for å holde oversikt over Auduns lokale vinlager. All kommunik
 
 **Iterasjon 1 og 2 er ferdige, testet og committet.** Funksjonalitet: legge til vin med etikettbilde (kamera på mobil), oversikt med søk/filtrering, ta ut/legge tilbake flasker, slette tomme viner, redigere vin (✏️ på kortet → `/rediger/[id]`, samme skjema forhåndsutfylt), varenummer med lenke til `https://www.vinmonopolet.no/search?q=<varenummer>` (åpnes i ny fane), «passer til» som faste tags.
 
+**Bildekomprimering (2026-07-12):** Kamerabilder på flere MB ga 413 mot server actions. `WineForm.tsx` komprimerer nå bildet på klienten før innsending (`compressPhoto`: canvas, maks 1600 px, JPEG 0.8 — gir typisk 200–500 KB; alle lagrede bilder heter `<uuid>.jpg`). `bodySizeLimit` er hevet til 3 MB i `next.config.ts` (under `experimental.serverActions`) som margin. Verifisert med ekte kamerabilde: 380 KB lagret.
+
 **Bevisste datamodell-valg:** `producer` og `location` (hylleplass) er FJERNET — produsent kan stå i navnet. `pairs_with` er ikke fritekst lenger, men kommaseparerte tags fra `PAIRS_WITH_TAGS` i `lib/types.ts` (frittstående, lyst kjøtt, storfe, svin, lam, vilt, fisk, skalldyr, ost, vegetar, dessert); `addWine`/`updateWine` forkaster ukjente tags. Skjemaendringer håndteres med drop-migreringer ved oppstart i `lib/db.ts` (mønster: sjekk `pragma_table_info`, kjør `ALTER TABLE ... DROP COLUMN`).
 
 **Eventuelt senere (iterasjon 3):** integrasjon mot Vinmonopolets API (https://api.vinmonopolet.no/apis) for å hente pris og detaljer automatisk fra varenummeret (`vinmonopolet_id`). Krever registrering og API-nøkkel — sjekk med Audun om han har skaffet nøkkel.
@@ -20,7 +22,7 @@ Next.js (App Router) + TypeScript + Tailwind 4, SQLite via better-sqlite3 (kreve
 - `lib/actions.ts` — server actions: `addWine`/`updateWine` (multipart med bilde, delt parsing i `parseWineFields`/`savePhoto`; nytt bilde ved redigering sletter det gamle fra disk), `takeOut`, `putBack`, `removeWine`
 - `lib/types.ts` — `Wine`-typen, `WINE_TYPES`, `TYPE_LABELS`, `PAIRS_WITH_TAGS`. Klientkomponenter må importere herfra, ALDRI fra `lib/db.ts` (drar inn better-sqlite3/node:fs og knekker bygget)
 - `app/page.tsx` — forsiden (server component, `force-dynamic`) + `app/components/WineList.tsx` (klient: søk, filter, ta ut/slett, rediger-lenke, Vinmonopolet-lenke)
-- `app/ny/page.tsx` og `app/rediger/[id]/page.tsx` (`params` er en Promise som må awaites) + `app/components/WineForm.tsx` — delt skjema; `wine`-prop = redigeringsmodus. Kamerainput (`<input type="file" capture="environment">`), «passer til» som checkbox-chips (`peer-checked`-styling)
+- `app/ny/page.tsx` og `app/rediger/[id]/page.tsx` (`params` er en Promise som må awaites) + `app/components/WineForm.tsx` — delt skjema; `wine`-prop = redigeringsmodus. Kamerainput (`<input type="file" capture="environment">`) med klientside-komprimering før opplasting, «passer til» som checkbox-chips (`peer-checked`-styling)
 - `app/api/images/[name]/route.ts` — serverer etikettbilder fra `data/images/` (path traversal-sikret med `path.basename`)
 - `app/manifest.ts` + `public/icon.svg` — PWA-manifest for «legg til på hjemskjerm»
 

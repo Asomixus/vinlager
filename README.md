@@ -2,7 +2,7 @@
 
 Mobilvennlig webapp (PWA) for å holde oversikt over det lokale vinlageret.
 
-- **Legg til vin** med bilde av etiketten (kamera på mobil)
+- **Legg til vin** med bilde av etiketten (kamera på mobil) — bildet komprimeres automatisk i nettleseren før opplasting
 - **Varenummer** fra Vinmonopolet kan registreres — kortet får da en lenke som åpner vinen på vinmonopolet.no
 - **«Passer til»** velges som tags fra en fast liste (lyst kjøtt, storfe, fisk, skalldyr m.fl.) så dataene holder seg konsistente
 - **Oversikt** med søk (navn, tags, varenummer) og filtrering på vintype
