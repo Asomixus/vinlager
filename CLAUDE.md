@@ -29,6 +29,10 @@ Uttak dekrementerer `quantity`; ved 0 vises vinen som «Utsolgt» bak et «Vis t
 - `make build` / `make run` — bygg og start produksjonsserver (port 3000)
 - `make dev` — utviklingsserver
 
+## Hemmeligheter
+
+API-nøkler o.l. ligger i `~/.config/vinlager/env` (chmod 600, utenfor repoet) og lastes som miljøvariabler av `make run`/`make dev`. Filen er deny-listet for Claude i `.claude/settings.json` — ikke forsøk å lese den, og be Audun redigere den selv (f.eks. `nano ~/.config/vinlager/env`). Per nå inneholder den `VINMONOPOLET_API_KEY` (placeholder til Audun har skaffet nøkkel).
+
 ## Testing av server actions via curl
 
 Action-ID-er ligger i `.next/server/server-reference-manifest.json`. Enkleste vei er MPA-formatet: POST vanlige skjemafelter pluss et tomt felt `$ACTION_ID_<hash>` til siden som bruker action-en (gir 303 ved suksess). Flight-formatet (`Next-Action`-header) funker for actions uten FormData: `-H "Next-Action: <hash>" -H "Content-Type: text/plain" --data '[<args>]'`.

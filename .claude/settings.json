@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(//home/audun/.config/vinlager/**)",
+      "Edit(//home/audun/.config/vinlager/**)"
+    ]
+  }
+}
