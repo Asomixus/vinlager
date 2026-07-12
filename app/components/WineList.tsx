@@ -15,7 +15,7 @@ export default function WineList({ wines }: { wines: Wine[] }) {
       if (!showEmpty && wine.quantity === 0) return false;
       if (typeFilter && wine.type !== typeFilter) return false;
       if (!query) return true;
-      return [wine.name, wine.producer, wine.pairs_with, wine.location]
+      return [wine.name, wine.producer, wine.pairs_with, wine.location, wine.vinmonopolet_id]
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(query));
     });
@@ -146,6 +146,18 @@ function WineCard({ wine }: { wine: Wine }) {
         )}
         {wine.location && (
           <p className="mt-0.5 text-xs text-muted">📍 {wine.location}</p>
+        )}
+        {wine.vinmonopolet_id && (
+          <p className="mt-0.5 text-xs">
+            <a
+              href={`https://www.vinmonopolet.no/search?q=${encodeURIComponent(wine.vinmonopolet_id)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline underline-offset-2"
+            >
+              Se på Vinmonopolet ({wine.vinmonopolet_id}) ↗
+            </a>
+          </p>
         )}
 
         <div className="mt-auto flex items-center justify-between pt-2">

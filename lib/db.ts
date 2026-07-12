@@ -52,11 +52,12 @@ export function insertWine(wine: {
   pairs_with: string | null;
   notes: string | null;
   image: string | null;
+  vinmonopolet_id: string | null;
 }): number {
   const result = db
     .prepare(
-      `INSERT INTO wines (name, producer, vintage, type, quantity, location, pairs_with, notes, image)
-       VALUES (@name, @producer, @vintage, @type, @quantity, @location, @pairs_with, @notes, @image)`
+      `INSERT INTO wines (name, producer, vintage, type, quantity, location, pairs_with, notes, image, vinmonopolet_id)
+       VALUES (@name, @producer, @vintage, @type, @quantity, @location, @pairs_with, @notes, @image, @vinmonopolet_id)`
     )
     .run(wine);
   return Number(result.lastInsertRowid);

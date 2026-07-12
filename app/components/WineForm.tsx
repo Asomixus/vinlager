@@ -98,9 +98,19 @@ export default function WineForm() {
         </Field>
       </div>
 
-      <Field label="Hylleplass">
-        <input name="location" placeholder="F.eks. hylle B3" className={inputClass} />
-      </Field>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Hylleplass">
+          <input name="location" placeholder="F.eks. hylle B3" className={inputClass} />
+        </Field>
+        <Field label="Varenummer">
+          <input
+            name="vinmonopolet_id"
+            inputMode="numeric"
+            placeholder="F.eks. 9921801"
+            className={inputClass}
+          />
+        </Field>
+      </div>
 
       <Field label="Passer til">
         <input

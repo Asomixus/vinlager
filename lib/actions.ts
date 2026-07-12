@@ -35,6 +35,7 @@ export async function addWine(formData: FormData): Promise<void> {
     pairs_with: emptyToNull(formData.get("pairs_with")),
     notes: emptyToNull(formData.get("notes")),
     image,
+    vinmonopolet_id: emptyToNull(formData.get("vinmonopolet_id")),
   });
 
   revalidatePath("/");
