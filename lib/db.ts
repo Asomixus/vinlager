@@ -14,7 +14,6 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS wines (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    producer TEXT,
     vintage INTEGER,
     type TEXT NOT NULL DEFAULT 'rødvin',
     quantity INTEGER NOT NULL DEFAULT 1,
@@ -27,9 +26,11 @@ db.exec(`
   );
 `);
 
-// Migrering: dropp location-kolonnen fra databaser opprettet før den ble fjernet
-if (db.prepare("SELECT 1 FROM pragma_table_info('wines') WHERE name = 'location'").get()) {
-  db.exec("ALTER TABLE wines DROP COLUMN location");
+// Migrering: dropp kolonner fra databaser opprettet før de ble fjernet
+for (const column of ["location", "producer"]) {
+  if (db.prepare("SELECT 1 FROM pragma_table_info('wines') WHERE name = ?").get(column)) {
+    db.exec(`ALTER TABLE wines DROP COLUMN ${column}`);
+  }
 }
 
 import type { Wine } from "./types";
@@ -48,7 +49,6 @@ export function getWine(id: number): Wine | undefined {
 
 export function insertWine(wine: {
   name: string;
-  producer: string | null;
   vintage: number | null;
   type: string;
   quantity: number;
@@ -59,11 +59,31 @@ export function insertWine(wine: {
 }): number {
   const result = db
     .prepare(
-      `INSERT INTO wines (name, producer, vintage, type, quantity, pairs_with, notes, image, vinmonopolet_id)
-       VALUES (@name, @producer, @vintage, @type, @quantity, @pairs_with, @notes, @image, @vinmonopolet_id)`
+      `INSERT INTO wines (name, vintage, type, quantity, pairs_with, notes, image, vinmonopolet_id)
+       VALUES (@name, @vintage, @type, @quantity, @pairs_with, @notes, @image, @vinmonopolet_id)`
     )
     .run(wine);
   return Number(result.lastInsertRowid);
+}
+
+export function updateWine(wine: {
+  id: number;
+  name: string;
+  vintage: number | null;
+  type: string;
+  quantity: number;
+  pairs_with: string | null;
+  notes: string | null;
+  image: string | null;
+  vinmonopolet_id: string | null;
+}): void {
+  db.prepare(
+    `UPDATE wines
+     SET name = @name, vintage = @vintage, type = @type, quantity = @quantity,
+         pairs_with = @pairs_with, notes = @notes, image = @image,
+         vinmonopolet_id = @vinmonopolet_id, updated_at = datetime('now')
+     WHERE id = @id`
+  ).run(wine);
 }
 
 export function adjustQuantity(id: number, delta: number): void {

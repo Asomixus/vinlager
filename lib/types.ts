@@ -1,7 +1,6 @@
 export type Wine = {
   id: number;
   name: string;
-  producer: string | null;
   vintage: number | null;
   type: string;
   quantity: number;
@@ -24,12 +23,13 @@ export const WINE_TYPES = [
 
 export const PAIRS_WITH_TAGS = [
   "frittstående",
-  "kjøtt",
-  "fisk",
-  "skalldyr",
-  "kylling",
+  "lyst kjøtt",
+  "storfe",
+  "svin",
   "lam",
   "vilt",
+  "fisk",
+  "skalldyr",
   "ost",
   "vegetar",
   "dessert",

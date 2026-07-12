@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { TYPE_LABELS, WINE_TYPES, type Wine } from "@/lib/types";
 import { putBack, removeWine, takeOut } from "@/lib/actions";
@@ -15,7 +16,7 @@ export default function WineList({ wines }: { wines: Wine[] }) {
       if (!showEmpty && wine.quantity === 0) return false;
       if (typeFilter && wine.type !== typeFilter) return false;
       if (!query) return true;
-      return [wine.name, wine.producer, wine.pairs_with, wine.vinmonopolet_id]
+      return [wine.name, wine.pairs_with, wine.vinmonopolet_id]
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(query));
     });
@@ -131,12 +132,21 @@ function WineCard({ wine }: { wine: Wine }) {
           <div className="min-w-0">
             <h2 className="truncate font-semibold leading-tight">{wine.name}</h2>
             <p className="truncate text-sm text-muted">
-              {[wine.producer, wine.vintage].filter(Boolean).join(" · ") || " "}
+              {[wine.vintage].filter(Boolean).join(" · ") || " "}
             </p>
           </div>
-          <span className="shrink-0 rounded-full border border-card-border px-2 py-0.5 text-xs text-muted">
-            {TYPE_LABELS[wine.type] ?? wine.type}
-          </span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <span className="rounded-full border border-card-border px-2 py-0.5 text-xs text-muted">
+              {TYPE_LABELS[wine.type] ?? wine.type}
+            </span>
+            <Link
+              href={`/rediger/${wine.id}`}
+              aria-label={`Rediger ${wine.name}`}
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-card-border text-sm"
+            >
+              ✏️
+            </Link>
+          </div>
         </div>
 
         {wine.pairs_with && (
