@@ -6,6 +6,8 @@ import { addWine, updateWine } from "@/lib/actions";
 
 export default function WineForm({ wine }: { wine?: Wine }) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -13,17 +15,27 @@ export default function WineForm({ wine }: { wine?: Wine }) {
   const imageSrc = preview ?? (wine?.image ? `/api/images/${wine.image}` : null);
   const selectedTags = wine?.pairs_with?.split(", ") ?? [];
 
-  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (preview) URL.revokeObjectURL(preview);
-    setPreview(file ? URL.createObjectURL(file) : null);
+    if (!file) {
+      setPhoto(null);
+      setPreview(null);
+      return;
+    }
+    setIsCompressing(true);
+    const compressed = await compressPhoto(file).catch(() => file);
+    setPhoto(compressed);
+    setPreview(URL.createObjectURL(compressed));
+    setIsCompressing(false);
   }
 
   return (
     <form
-      action={(formData) =>
-        startTransition(() => (isEdit ? updateWine(formData) : addWine(formData)))
-      }
+      action={(formData) => {
+        if (photo) formData.set("photo", photo, photo.name);
+        startTransition(() => (isEdit ? updateWine(formData) : addWine(formData)));
+      }}
       className="flex flex-col gap-4"
     >
       {isEdit && <input type="hidden" name="id" value={wine.id} />}
@@ -140,13 +152,40 @@ export default function WineForm({ wine }: { wine?: Wine }) {
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || isCompressing}
         className="mt-2 rounded-xl bg-accent py-3.5 text-lg font-semibold text-accent-foreground active:scale-[0.98] disabled:opacity-50"
       >
         {isPending ? "Lagrer …" : isEdit ? "Lagre endringer" : "Legg til i lageret"}
       </button>
     </form>
   );
+}
+
+// Server actions har en grense på request-størrelse, og kamerabilder er gjerne
+// flere MB — skaler ned og re-enkod som JPEG før opplasting.
+const MAX_DIMENSION = 1600;
+
+async function compressPhoto(file: File): Promise<File> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.8),
+    );
+    if (!blob) throw new Error("Kunne ikke komprimere bildet");
+    return new File([blob], "etikett.jpg", { type: "image/jpeg" });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 const inputClass =
