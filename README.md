@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vinlager 🍷
 
-## Getting Started
+Mobilvennlig webapp (PWA) for å holde oversikt over det lokale vinlageret.
 
-First, run the development server:
+- **Legg til vin** med bilde av etiketten (kamera på mobil)
+- **Oversikt** med søk og filtrering på vintype, «passer til» og hylleplass
+- **Ta ut flasker** med ett trykk — antallet telles ned, og tomme viner kan slettes
+
+## Teknologi
+
+Next.js (App Router) + TypeScript + Tailwind, med SQLite (better-sqlite3) som database.
+Databasen og etikettbildene lagres under `data/` (kan overstyres med `VINLAGER_DATA_DIR`).
+
+## Kjøring
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # utvikling på http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Produksjon (f.eks. på hjemmeserver):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start          # lytter på port 3000, også på lokalnettet
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Åpne adressen på mobilen (samme nettverk) og velg «Legg til på startskjermen» for å få den som app.
 
-## Learn More
+## Iterasjoner
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. ✅ Legge til vin (med etikettbilde), oversikt, ta ut flasker
+2. ⬜ Integrasjon mot [Vinmonopolets API](https://api.vinmonopolet.no/apis) — hente «passer til», pris m.m. (datamodellen har `vinmonopolet_id` klart)
