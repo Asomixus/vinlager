@@ -108,11 +108,12 @@ function WineCard({ wine }: { wine: Wine }) {
 
   return (
     <li
-      className={`flex gap-3 rounded-2xl border border-card-border bg-card p-3 shadow-sm ${
+      className={`relative min-h-24 overflow-hidden rounded-2xl border border-card-border bg-card shadow-sm ${
         isEmpty ? "opacity-60" : ""
       }`}
     >
-      <div className="h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-background">
+      {/* Absolutt posisjonert så bildehøyden aldri påvirker kortets høyde. */}
+      <div className="absolute inset-y-0 left-0 w-20 overflow-hidden bg-background">
         {wine.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -127,7 +128,7 @@ function WineCard({ wine }: { wine: Wine }) {
         )}
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="ml-20 flex min-w-0 flex-col p-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h2 className="truncate font-semibold leading-tight">{wine.name}</h2>
