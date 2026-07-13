@@ -2,14 +2,17 @@
 
 import { useRef, useState, useTransition } from "react";
 import { PAIRS_WITH_TAGS, TYPE_LABELS, WINE_TYPES, type Wine } from "@/lib/types";
-import { addWine, updateWine } from "@/lib/actions";
+import { addWine, lookupVinmonopolet, updateWine } from "@/lib/actions";
 
 export default function WineForm({ wine }: { wine?: Wine }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const isEdit = wine !== undefined;
   const imageSrc = preview ?? (wine?.image ? `/api/images/${wine.image}` : null);
@@ -30,8 +33,49 @@ export default function WineForm({ wine }: { wine?: Wine }) {
     setIsCompressing(false);
   }
 
+  async function handleLookup() {
+    const form = formRef.current!;
+    const varenummer = (form.elements.namedItem("vinmonopolet_id") as HTMLInputElement).value.trim();
+    if (!varenummer) {
+      setLookupError("Fyll inn varenummer først.");
+      return;
+    }
+
+    setIsLookingUp(true);
+    setLookupError(null);
+    try {
+      const info = await lookupVinmonopolet(varenummer);
+      if (!info) {
+        setLookupError("Fant ikke varen hos Vinmonopolet.");
+        return;
+      }
+
+      (form.elements.namedItem("name") as HTMLInputElement).value = info.name;
+      (form.elements.namedItem("type") as HTMLSelectElement).value = info.type;
+      if (info.vintage) {
+        (form.elements.namedItem("vintage") as HTMLInputElement).value = String(info.vintage);
+      }
+      for (const checkbox of form.querySelectorAll<HTMLInputElement>('input[name="pairs_with"]')) {
+        checkbox.checked = info.pairsWith.includes(checkbox.value);
+      }
+
+      if (info.imageDataUrl) {
+        const blob = await (await fetch(info.imageDataUrl)).blob();
+        if (preview) URL.revokeObjectURL(preview);
+        const file = new File([blob], "etikett.jpg", { type: blob.type || "image/jpeg" });
+        setPhoto(file);
+        setPreview(URL.createObjectURL(file));
+      }
+    } catch {
+      setLookupError("Oppslaget feilet — prøv igjen.");
+    } finally {
+      setIsLookingUp(false);
+    }
+  }
+
   return (
     <form
+      ref={formRef}
       action={(formData) => {
         if (photo) formData.set("photo", photo, photo.name);
         startTransition(() => (isEdit ? updateWine(formData) : addWine(formData)));
@@ -116,15 +160,30 @@ export default function WineForm({ wine }: { wine?: Wine }) {
           />
         </Field>
         <Field label="Varenummer">
-          <input
-            name="vinmonopolet_id"
-            inputMode="numeric"
-            defaultValue={wine?.vinmonopolet_id ?? undefined}
-            placeholder="F.eks. 9921801"
-            className={inputClass}
-          />
+          <div className="flex gap-2">
+            <input
+              name="vinmonopolet_id"
+              inputMode="numeric"
+              defaultValue={wine?.vinmonopolet_id ?? undefined}
+              placeholder="F.eks. 9921801"
+              className={`${inputClass} min-w-0`}
+            />
+            <button
+              type="button"
+              onClick={handleLookup}
+              disabled={isLookingUp}
+              aria-label="Hent info fra Vinmonopolet"
+              title="Hent info fra Vinmonopolet"
+              className="shrink-0 rounded-xl border border-card-border bg-card px-3 text-lg active:scale-[0.98] disabled:opacity-50"
+            >
+              {isLookingUp ? "…" : "🍷"}
+            </button>
+          </div>
         </Field>
       </div>
+      {lookupError && (
+        <p className="-mt-2 text-sm text-red-600 dark:text-red-400">{lookupError}</p>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-muted">Passer til</span>

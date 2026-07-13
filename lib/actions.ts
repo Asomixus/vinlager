@@ -6,7 +6,8 @@ import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as db from "./db";
-import { PAIRS_WITH_TAGS } from "./types";
+import { PAIRS_WITH_TAGS, type VinmonopoletInfo } from "./types";
+import { fetchVinmonopoletInfo } from "./vinmonopolet";
 
 export async function addWine(formData: FormData): Promise<void> {
   const fields = parseWineFields(formData);
@@ -54,6 +55,18 @@ export async function takeOut(id: number): Promise<void> {
 export async function putBack(id: number): Promise<void> {
   db.adjustQuantity(id, 1);
   revalidatePath("/");
+}
+
+export async function lookupVinmonopolet(
+  varenummer: string,
+): Promise<VinmonopoletInfo | null> {
+  try {
+    return await fetchVinmonopoletInfo(varenummer.trim());
+  } catch {
+    // Uoffisiell kilde — nettverksfeil eller endret sidestruktur skal bare
+    // gi «fant ikke» i skjemaet, aldri knekke innleggingen.
+    return null;
+  }
 }
 
 export async function removeWine(id: number): Promise<void> {

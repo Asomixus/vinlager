@@ -35,6 +35,15 @@ export const PAIRS_WITH_TAGS = [
   "dessert",
 ] as const;
 
+// Resultatet av et oppslag mot Vinmonopolet (se lib/vinmonopolet.ts).
+export type VinmonopoletInfo = {
+  name: string;
+  vintage: number | null;
+  type: (typeof WINE_TYPES)[number];
+  pairsWith: string[];
+  imageDataUrl: string | null;
+};
+
 export const TYPE_LABELS: Record<string, string> = {
   rødvin: "Rødvin",
   hvitvin: "Hvitvin",

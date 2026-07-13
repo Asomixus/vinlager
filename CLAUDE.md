@@ -4,22 +4,23 @@
 
 Mobilvennlig PWA for å holde oversikt over Auduns lokale vinlager. All kommunikasjon foregår på norsk.
 
-## Status (per 2026-07-12)
+## Status (per 2026-07-13)
 
-**Iterasjon 1 og 2 er ferdige, testet og committet.** Funksjonalitet: legge til vin med etikettbilde (kamera på mobil), oversikt med søk/filtrering, ta ut/legge tilbake flasker, slette tomme viner, redigere vin (✏️ på kortet → `/rediger/[id]`, samme skjema forhåndsutfylt), varenummer med lenke til `https://www.vinmonopolet.no/search?q=<varenummer>` (åpnes i ny fane), «passer til» som faste tags.
+**Iterasjon 1, 2 og 3 er ferdige, testet og committet.** Funksjonalitet: legge til vin med etikettbilde (kamera på mobil), oversikt med søk/filtrering, ta ut/legge tilbake flasker, slette tomme viner, redigere vin (✏️ på kortet → `/rediger/[id]`, samme skjema forhåndsutfylt), varenummer med lenke til `https://www.vinmonopolet.no/search?q=<varenummer>` (åpnes i ny fane), «passer til» som faste tags.
 
 **Bildekomprimering (2026-07-12):** Kamerabilder på flere MB ga 413 mot server actions. `WineForm.tsx` komprimerer nå bildet på klienten før innsending (`compressPhoto`: canvas, maks 1600 px, JPEG 0.8 — gir typisk 200–500 KB; alle lagrede bilder heter `<uuid>.jpg`). `bodySizeLimit` er hevet til 3 MB i `next.config.ts` (under `experimental.serverActions`) som margin. Verifisert med ekte kamerabilde: 380 KB lagret.
 
 **Bevisste datamodell-valg:** `producer` og `location` (hylleplass) er FJERNET — produsent kan stå i navnet. `pairs_with` er ikke fritekst lenger, men kommaseparerte tags fra `PAIRS_WITH_TAGS` i `lib/types.ts` (frittstående, lyst kjøtt, storfe, svin, lam, vilt, fisk, skalldyr, ost, vegetar, dessert); `addWine`/`updateWine` forkaster ukjente tags. Skjemaendringer håndteres med drop-migreringer ved oppstart i `lib/db.ts` (mønster: sjekk `pragma_table_info`, kjør `ALTER TABLE ... DROP COLUMN`).
 
-**Eventuelt senere (iterasjon 3):** integrasjon mot Vinmonopolets API (https://api.vinmonopolet.no/apis) for å hente pris og detaljer automatisk fra varenummeret (`vinmonopolet_id`). Krever registrering og API-nøkkel — sjekk med Audun om han har skaffet nøkkel.
+**Vinmonopolet-oppslag (iterasjon 3, 2026-07-13):** 🍷-knapp ved varenummer-feltet fyller ut navn, årgang, type, «passer til» og etikettbilde. Løst UTEN det offisielle API-et (ingen nøkkel trengs): `lib/vinmonopolet.ts` henter produktsiden `vinmonopolet.no/p/<varenummer>` og parser JSON-en i `<script type="application/json">`-blokken med `product`-nøkkel. Der ligger alt: `year`, `content.isGoodFor` (kodene A–R mappes til våre tags i `PAIRS_WITH_BY_CODE`; f.eks. A=Aperitiff→frittstående, R=Grønnsaker→vegetar), `main_category.code` (mappes i `TYPE_BY_CATEGORY`; sterkvin→dessertvin) og bilde-URL-er (`bilder.vinmonopolet.no/cache/<størrelse>/<varenummer>-1.jpg`). Årgangen strippes fra slutten av navnet siden vi har eget felt. Bildet lastes ned server-side (CORS) og returneres som data-URL; klienten gjør det om til `File` så det går gjennom samme opplastingsløype som kamerabilder. Uoffisiell kilde — alle feil ender som `null`/«Fant ikke varen», aldri krasj. Søke-API-et (`/vmpws/v2/vmp/products/search?q=`) finnes også, men mangler årgang og «passer til». Det offisielle API-et (`VINMONOPOLET_API_KEY` i env-filen) er dermed ikke i bruk.
 
 ## Arkitektur
 
 Next.js (App Router) + TypeScript + Tailwind 4, SQLite via better-sqlite3 (krever `serverExternalPackages` i next.config.ts).
 
 - `lib/db.ts` — databaseoppsett, skjema, drop-migreringer og alle SQL-spørringer. DB og bilder under `data/` (gitignorert, overstyres med `VINLAGER_DATA_DIR`)
-- `lib/actions.ts` — server actions: `addWine`/`updateWine` (multipart med bilde, delt parsing i `parseWineFields`/`savePhoto`; nytt bilde ved redigering sletter det gamle fra disk), `takeOut`, `putBack`, `removeWine`
+- `lib/actions.ts` — server actions: `addWine`/`updateWine` (multipart med bilde, delt parsing i `parseWineFields`/`savePhoto`; nytt bilde ved redigering sletter det gamle fra disk), `takeOut`, `putBack`, `removeWine`, `lookupVinmonopolet` (wrapper rundt `lib/vinmonopolet.ts`, svelger alle feil til `null`)
+- `lib/vinmonopolet.ts` — scraper Vinmonopolets produktside og mapper til `VinmonopoletInfo` (se Status)
 - `lib/types.ts` — `Wine`-typen, `WINE_TYPES`, `TYPE_LABELS`, `PAIRS_WITH_TAGS`. Klientkomponenter må importere herfra, ALDRI fra `lib/db.ts` (drar inn better-sqlite3/node:fs og knekker bygget)
 - `app/page.tsx` — forsiden (server component, `force-dynamic`) + `app/components/WineList.tsx` (klient: søk, filter, ta ut/slett, rediger-lenke, Vinmonopolet-lenke)
 - `app/ny/page.tsx` og `app/rediger/[id]/page.tsx` (`params` er en Promise som må awaites) + `app/components/WineForm.tsx` — delt skjema; `wine`-prop = redigeringsmodus. Kamerainput (`<input type="file" capture="environment">`) med klientside-komprimering før opplasting, «passer til» som checkbox-chips (`peer-checked`-styling)
