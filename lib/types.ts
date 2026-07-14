@@ -18,6 +18,7 @@ export const WINE_TYPES = [
   "musserende",
   "rosé",
   "dessertvin",
+  "sterkvin",
   "annet",
 ] as const;
 
@@ -50,5 +51,6 @@ export const TYPE_LABELS: Record<string, string> = {
   musserende: "Musserende",
   rosé: "Rosé",
   dessertvin: "Dessertvin",
+  sterkvin: "Sterkvin",
   annet: "Annet",
 };

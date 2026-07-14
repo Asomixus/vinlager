@@ -27,7 +27,7 @@ const TYPE_BY_CATEGORY: Record<string, (typeof WINE_TYPES)[number]> = {
   rosévin: "rosé",
   musserende_vin: "musserende",
   perlende_vin: "musserende",
-  sterkvin: "dessertvin",
+  sterkvin: "sterkvin",
 };
 
 type EmbeddedProduct = {
