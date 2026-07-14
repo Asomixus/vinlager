@@ -33,6 +33,9 @@ for (const column of ["location", "producer"]) {
   }
 }
 
+// Migrering: vintypen «sterkvin» er fjernet (erstattet av «portvin»)
+db.exec("UPDATE wines SET type = 'annet' WHERE type = 'sterkvin'");
+
 import type { Wine } from "./types";
 
 export type { Wine };

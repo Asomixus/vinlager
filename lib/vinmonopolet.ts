@@ -27,7 +27,6 @@ const TYPE_BY_CATEGORY: Record<string, (typeof WINE_TYPES)[number]> = {
   rosévin: "rosé",
   musserende_vin: "musserende",
   perlende_vin: "musserende",
-  sterkvin: "sterkvin",
 };
 
 type EmbeddedProduct = {
@@ -35,6 +34,7 @@ type EmbeddedProduct = {
   name?: string;
   year?: string;
   main_category?: { code?: string };
+  main_sub_category?: { code?: string };
   content?: { isGoodFor?: { code?: string }[] };
   images?: { format?: string; url?: string }[];
 };
@@ -66,7 +66,12 @@ export async function fetchVinmonopoletInfo(
     // Årgangen ligger også sist i navnet — stripp den, vi har eget felt.
     name: vintage ? product.name.replace(new RegExp(`\\s+${vintage}$`), "") : product.name,
     vintage,
-    type: TYPE_BY_CATEGORY[product.main_category?.code ?? ""] ?? "annet",
+    // Portvin ligger under hovedkategorien sterkvin (som også dekker sherry,
+    // madeira osv. — de faller til «annet»).
+    type:
+      product.main_sub_category?.code === "sterkvin_portvin"
+        ? "portvin"
+        : (TYPE_BY_CATEGORY[product.main_category?.code ?? ""] ?? "annet"),
     pairsWith,
     imageDataUrl: await downloadImage(product.images),
   };
